@@ -394,7 +394,7 @@ def register_start_handlers(bot):
         except Exception:
             bot.reply_to(message, result_msg)
 
-    # Callback query handler
+    # Callback query handler - COMPLETE WITH ALL CALLBACKS
     @bot.callback_query_handler(func=lambda call: True)
     def callback_dispatcher(call):
         data = call.data or ""
@@ -517,7 +517,881 @@ def register_start_handlers(bot):
                     bot.answer_callback_query(call.id, "Unable to go back to start.", show_alert=False)
             return
 
-        # Add more callback handlers here for ffilter_help, dmffilter_help, etc.
+        # BACK TO CMD callback
+        if data == "back_to_cmd":
+            name = call.from_user.first_name if call.from_user else "User"
+            user_id = call.from_user.id if call.from_user else call.message.chat.id
+
+            caption = f"""👋 𝐇𝐞𝐲, {name}!
+🆔 𝐘𝐨𝐮𝐫 𝐈𝐃: <code>{user_id}</code>
+        
+<blockquote>»ᴄᴍᴅ ᴄᴏᴍᴍᴀɴᴅ
+ᴄᴏᴍᴘʟᴇᴛᴇ ʙᴏᴛ ᴄᴏᴍᴍᴀɴᴅꜱ ɢᴜɪᴅᴇ
+
+<b>ᴡʜᴀᴛ ɪᴛ ᴄᴏɴᴛᴀɪɴꜱ:</b>
+• ᴀʟʟ ʙᴏᴛ ᴄᴏᴍᴍᴀɴᴅꜱ ᴄᴀᴛᴇɢᴏʀɪᴢᴇᴅ
+• ᴅᴇᴛᴀɪʟᴇᴅ ᴜꜱᴀɴɢᴇ ɪɴꜱᴛʀᴜᴄᴛɪᴏɴꜱ
+• ʙᴜᴛᴛᴏɴ-ʙᴀꜱᴇᴅ ɴᴀᴠɪɢᴀᴛɪᴏɴ
+• ꜱᴜʙ-ᴄᴀᴛᴇɢᴏʀɪᴇꜱ ꜰᴏʀ ᴇᴀꜱʏ ᴀᴄᴄᴇꜱꜱ
+
+<b>ᴡʜʏ ɪᴛ ᴡᴀꜱ ᴄʀᴇᴀᴛᴇᴅ:</b>
+ᴛᴏ ᴘʀᴏᴠɪᴅᴇ ᴀ ᴄᴏᴍᴘʟᴇᴛᴇ ᴀɴᴅ ᴀᴅᴍɪɴ-ꜰʀɪᴇɴᴅʟʏ ɢᴜɪᴅᴇ ꜰᴏʀ ᴀʟʟ ʙᴏᴛ ꜰᴇᴀᴛᴜʀᴇꜱ ᴀɴᴅ ᴄᴏᴍᴍᴀɴᴅꜱ</blockquote>"""
+
+            buttons = [
+                [
+                    types.InlineKeyboardButton("ꜰɪʟᴛᴇʀ", callback_data="ffilter_help"),
+                    types.InlineKeyboardButton("ᴅᴍꜰɪʟᴛᴇʀ", callback_data="dmffilter_help"),
+                    types.InlineKeyboardButton("fstatus", callback_data="fstatus_help"),
+                ],
+                [
+                    types.InlineKeyboardButton("ꜱᴛᴀᴛꜱ", callback_data="sstats_help"),
+                    types.InlineKeyboardButton("ʙʀᴏᴀᴅᴄᴀꜱᴛ!!", callback_data="bbroadcast_help"),
+                    types.InlineKeyboardButton("ᴘɪɴɢ", callback_data="pping_help"),
+                ],
+                [
+                    types.InlineKeyboardButton("fstats", callback_data="fstats_help")
+                ],
+            ]
+
+            try:
+                # Try to edit message if it's a photo message
+                if call.message.content_type == 'photo':
+                    bot.edit_message_media(
+                        media=types.InputMediaPhoto(CMD_IMAGE),
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id,
+                        reply_markup=make_inline_keyboard(buttons)
+                    )
+                    bot.edit_message_caption(
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id,
+                        caption=caption,
+                        reply_markup=make_inline_keyboard(buttons),
+                        parse_mode="HTML"
+                    )
+                else:
+                    bot.edit_message_text(
+                        caption,
+                        call.message.chat.id,
+                        call.message.message_id,
+                        reply_markup=make_inline_keyboard(buttons),
+                        parse_mode="HTML"
+                    )
+                bot.answer_callback_query(call.id)
+            except Exception as e:
+                print(f"back_to_cmd edit failed: {e}")
+                try:
+                    bot.edit_message_text(
+                        caption,
+                        call.message.chat.id,
+                        call.message.message_id,
+                        reply_markup=make_inline_keyboard(buttons),
+                        parse_mode="HTML"
+                    )
+                    bot.answer_callback_query(call.id)
+                except Exception as e2:
+                    print(f"back_to_cmd: fallback edit_text failed: {e2}")
+                    bot.answer_callback_query(call.id, "Unable to go back to cmd.", show_alert=False)
+            return
+
+        # FILTER HELP callback
+        elif data == "ffilter_help":
+            help_text = """💞 Hᴇʏ...!!,
+
+<blockquote>➪ꜰɪʟᴛᴇʀ
+ᴀᴅᴅ ꜰɪʟᴛᴇʀ:
+<code>/filter</code> ᴋᴇʏᴡᴏʀᴅ - ʀᴇᴘʟʏ ᴛᴏ ᴀ ᴍᴇꜱꜱᴀɢᴇ
+ʏᴏᴜ ᴄᴀɴ ᴀᴅᴅ ꜰɪʟᴛᴇʀꜱ ɪɴ ɢʀᴏᴜᴘ ᴀɴᴅ ᴅᴍ ʙᴏᴛʜ
+
+ꜱᴛᴏᴘ ꜰɪʟᴛᴇʀ:
+<code>/stop</code> ᴋᴇʏᴡᴏʀᴅ - ᴅᴇʟᴇᴛᴇ ᴀ ꜰɪʟᴛᴇʀ
+ʏᴏᴜ ᴄᴀɴ ꜱᴛᴏᴘ ꜰɪʟᴛᴇʀꜱ ɪɴ ɢʀᴏᴜᴘ ᴀɴᴅ ᴅᴍ ʙᴏᴛʜ
+
+ᴀʟʟ ꜰɪʟᴛᴇʀꜱ:
+<code>/filters</code> - ꜱʜᴏᴡ ᴀʟʟ ꜱᴀᴠᴇᴅ ꜰɪʟᴛᴇʀꜱ</blockquote>"""
+
+            kb = types.InlineKeyboardMarkup()
+            kb.row(types.InlineKeyboardButton("🔙 Back", callback_data="back_to_cmd"))
+
+            try:
+                if call.message.content_type == 'photo':
+                    bot.edit_message_media(
+                        media=types.InputMediaPhoto(STATS_IMAGE),
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id
+                    )
+                    bot.edit_message_caption(
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id,
+                        caption=help_text,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                else:
+                    bot.edit_message_text(
+                        help_text,
+                        call.message.chat.id,
+                        call.message.message_id,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                bot.answer_callback_query(call.id)
+            except Exception as e:
+                print(f"ffilter_help callback edit failed: {e}")
+                bot.answer_callback_query(call.id, "Unable to open ffilter_help.", show_alert=False)
+            return
+
+        # DM FILTER HELP callback
+        elif data == "dmffilter_help":
+            help_text = """💞 Hᴇʏ...!!,
+
+<blockquote><b>➪ᴅᴍ ꜰɪʟᴛᴇʀ</b>
+ᴅᴍ ᴏɴʟʏ ꜰɪʟᴛᴇʀ ᴀᴅᴅ:
+<code>/filter</code> ᴋᴇʏᴡᴏʀᴅ - ʀᴇᴘʟʏ ᴛᴏ ᴀ ᴍᴇꜱꜱᴀɢᴇ
+ʏᴏᴜ ᴄᴀɴ ᴀᴅᴅ ᴅᴍ ꜰɪʟᴛᴇʀꜱ ɪɴ ɢʀᴏᴜᴘ ᴀɴᴅ ᴅᴍ ʙᴏᴛʜ
+
+ꜱᴛᴏᴘ ᴅᴍ ꜰɪʟᴛᴇʀ:
+<code>/bstop</code> ᴋᴇʏᴡᴏʀᴅ - ᴅᴇʟᴇᴛᴇ ᴀ ᴅᴍ ꜰɪʟᴛᴇʀ
+ʏᴏᴜ ᴄᴀɴ ꜱᴛᴏᴘ ᴅᴍ ꜰɪʟᴛᴇʀꜱ ɪɴ ɢʀᴏᴜᴘ ᴀɴᴅ ᴅᴍ ʙᴏᴛʜ
+
+ᴀʟʟ ᴅᴍ ꜰɪʟᴛᴇʀꜱ:
+<code>/bfilters</code> - ꜱʜᴏᴡ ᴀʟʟ ᴅᴍ ᴏɴʟʏ ꜰɪʟᴛᴇʀꜱ
+
+ɴᴏᴛᴇ:
+ᴛᴏ ᴜꜱᴇ ᴅᴍ ꜰɪʟᴛᴇʀꜱ, ʏᴏᴜ ɴᴇᴇᴅ ᴛᴏ ɢᴏ ʙᴀᴄᴋ ᴀɴᴅ ᴄʜᴇᴄᴋ ꜰꜱᴛᴀᴛᴜꜱ ꜰᴏʀ ꜰᴜʟʟ ꜰᴇᴀᴛᴜʀᴇꜱ ᴛᴏ ꜱᴇᴇ ʜᴏᴡ ᴛᴏ ᴜꜱᴇ ᴛʜᴇᴍ ᴀɴᴅ ʜᴏᴡ ᴛᴏ ᴇɴᴀʙʟᴇ ᴏʀ ᴅɪꜱᴀʙʟᴇ ᴛʜᴇᴍ
+</blockquote>"""
+
+            kb = types.InlineKeyboardMarkup()
+            kb.row(types.InlineKeyboardButton("🔙 Back", callback_data="back_to_cmd"))
+
+            try:
+                if call.message.content_type == 'photo':
+                    bot.edit_message_media(
+                        media=types.InputMediaPhoto(STATS_IMAGE),
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id
+                    )
+                    bot.edit_message_caption(
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id,
+                        caption=help_text,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                else:
+                    bot.edit_message_text(
+                        help_text,
+                        call.message.chat.id,
+                        call.message.message_id,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                bot.answer_callback_query(call.id)
+            except Exception as e:
+                print(f"dmffilter_help callback edit failed: {e}")
+                bot.answer_callback_query(call.id, "Unable to open dmffilter_help.", show_alert=False)
+            return
+
+        # FSTATUS HELP callback
+        elif data == "fstatus_help":
+            help_text = """💞 Hᴇʏ...!!,
+
+<blockquote><b>➪ꜰꜱᴛᴀᴛᴜꜱ</b>
+<code>/fstatus</code>- ꜱʜᴏᴡꜱ ᴄᴏᴍᴘʟᴇᴛᴇ ᴅᴍ ꜰɪʟᴛᴇʀꜱ ʀᴇᴘᴏʀᴇ:
+• ɢʟᴏʙᴀʟ ᴅᴍ ꜰɪʟᴛᴇʀꜱ ꜱᴛᴀᴛᴜꜱ (ᴇɴᴀʙʟᴇᴅ/ᴅɪꜱᴀʙʟᴇᴅ)
+• ᴄʀᴇᴀᴛɪᴏɴ ᴍᴏᴅᴇ ꜱᴛᴀᴛᴜꜱ (ᴅᴍ ᴏɴʟʏ/ɴᴏʀᴍᴀʟ)
+• ɢʟᴏʙᴀʟ ɢʀᴏᴜᴘꜱ ꜱᴛᴀᴛᴜꜱ (ᴇɴᴀʙʟᴇᴅ/ᴅɪꜱᴀʙʟᴇᴅ)
+• ᴇɴᴀʙʟᴇᴅ ɢʟᴏᴜᴘꜱ ᴄᴏᴜɴᴛ
+• ᴅɪꜱᴀʙʟᴇᴅ ɢʀᴏᴜᴘꜱ ᴄᴏᴜɴᴛ
+• ᴅᴍ ᴏɴʟʏ ꜰɪʟᴛᴇʀꜱ ᴄᴏᴜɴᴛ</blockquote>"""
+
+            kb = types.InlineKeyboardMarkup()
+            kb.row(types.InlineKeyboardButton("🔙 Back", callback_data="back_to_cmd"))
+
+            try:
+                if call.message.content_type == 'photo':
+                    bot.edit_message_media(
+                        media=types.InputMediaPhoto(STATS_IMAGE),
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id
+                    )
+                    bot.edit_message_caption(
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id,
+                        caption=help_text,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                else:
+                    bot.edit_message_text(
+                        help_text,
+                        call.message.chat.id,
+                        call.message.message_id,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                bot.answer_callback_query(call.id)
+            except Exception as e:
+                print(f"fstatus_help callback edit failed: {e}")
+                bot.answer_callback_query(call.id, "Unable to open fstatus_help.", show_alert=False)
+            return
+
+        # STATS HELP callback
+        elif data == "sstats_help":
+            help_text = """💞 Hᴇʏ...!!,
+
+<blockquote>➪<b>ꜱᴛᴀᴛꜱ</b>
+<code>/stats</code> - ꜱʜᴏᴡꜱ ᴄᴏᴍᴘʟᴇᴛᴇ ʙᴏᴛ ꜱᴛᴀᴛɪꜱᴛɪᴄꜱ:
+• ᴛᴏᴛᴀʟ ᴜꜱᴇʀꜱ ᴄᴏᴜɴᴛ
+• ᴛᴏᴛᴀʟ ɢʀᴏᴜᴘꜱ ᴄᴏᴜɴᴛ
+• ᴛᴏᴛᴀʟ ɴᴏʀᴍᴀʟ ꜰɪʟᴛᴇʀꜱ ᴄᴏᴜɴᴛ
+• ᴛᴏᴛᴀʟ ᴅᴍ ᴏɴʟʏ ꜰɪʟᴛᴇʀꜱ ᴄᴏᴜɴᴛ
+• ᴀᴅᴍɪɴꜱ ʟɪꜱᴛ
+• ʙᴏᴛ ꜱᴛᴀᴛᴜꜱ</blockquote>"""
+
+            kb = types.InlineKeyboardMarkup()
+            kb.row(types.InlineKeyboardButton("🔙 Back", callback_data="back_to_cmd"))
+
+            try:
+                if call.message.content_type == 'photo':
+                    bot.edit_message_media(
+                        media=types.InputMediaPhoto(STATS_IMAGE),
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id
+                    )
+                    bot.edit_message_caption(
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id,
+                        caption=help_text,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                else:
+                    bot.edit_message_text(
+                        help_text,
+                        call.message.chat.id,
+                        call.message.message_id,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                bot.answer_callback_query(call.id)
+            except Exception as e:
+                print(f"sstats_help callback edit failed: {e}")
+                bot.answer_callback_query(call.id, "Unable to open sstats_help.", show_alert=False)
+            return
+
+        # BROADCAST HELP callback
+        elif data == "bbroadcast_help":
+            help_text = """💞 Hᴇʏ...!!,
+
+<blockquote expendable>➪<b>ʙʀᴏᴀᴅᴄᴀꜱᴛ</b>
+<code>/broadcast</code>- ʀᴇᴘʟʏ ᴛᴏ ᴀ ᴍᴇꜱꜱᴀɢᴇ ᴛᴏ ꜱᴇɴᴅ ɪᴛ ᴛᴏ ᴀʟʟ ᴜꜱᴇʀꜱ ᴀɴᴅ ɢʀᴏᴜᴘꜱ
+
+ʜᴏᴡ ɪᴛ ᴡᴏʀᴋꜱ:
+1. ꜱᴇɴᴅ ᴀ ᴍᴇꜱꜱᴀɢᴇ (ᴛᴇxᴛ/ᴘʜᴏᴛᴏ/ᴀɴʏ ᴛʏᴘᴇ)
+2. ʀᴇᴘʟʏ ᴛᴏ ɪᴛ ᴡɪᴛʜ /ʙʀᴏᴀᴅᴄᴀꜱᴛ
+3. ʙᴏᴛ ᴡɪʟʟ ꜱᴇɴᴅ ᴛʜᴇ ᴍᴇꜱꜱᴀɢᴇ ᴛᴏ ᴀʟʟ ᴜꜱᴇʀꜱ ᴀɴᴅ ɢʀᴏᴜᴘꜱ ɪɴ ᴅᴀᴛᴀʙᴀꜱᴇ
+4. ꜱʜᴏᴡꜱ ᴘʀᴏɢʀᴇꜱꜱ ᴡɪᴛʜ ꜱᴜᴄᴄᴇꜱꜱ/ꜰᴀɪʟᴇᴅ ᴄᴏᴜɴᴛꜱ
+
+➪<b>ᴀʙʀᴏᴀᴅᴄᴀꜱᴛ</b>
+<code>/abroadcast</code>- ʀᴇᴘʟʏ ᴛᴏ ᴀ ᴍᴇꜱꜱᴀɢᴇ ᴛᴏ ꜱᴇɴᴅ ɪᴛ ᴏɴʟʏ ᴛᴏ ᴀᴅᴍɪɴꜱ ɪɴ ᴅᴍ
+
+ʜᴏᴡ ɪᴛ ᴡᴏʀᴋꜱ:
+1. ꜱᴇɴᴅ ᴀ ᴍᴇꜱꜱᴀɢᴇ (ᴛᴇxᴛ/ᴘʜᴏᴛᴏ/ᴀɴʏ ᴛʏᴘᴇ)
+2. ʀᴇᴘʟʏ ᴛᴏ ɪᴛ ᴡɪᴛʜ /ᴀʙʀᴏᴀᴅᴄᴀꜱᴛ
+3. ʙᴏᴛ ᴡɪʟʟ ꜱᴇɴᴅ ᴛʜᴇ ᴍᴇꜱꜱᴀɢᴇ ᴏɴʟʏ ᴛᴏ ᴀʟʟ ᴀᴅᴍɪɴꜱ ɪɴ ᴅᴍ
+4. ɢʀᴏᴜᴘꜱ ᴀʀᴇ ᴄᴏᴍᴘʟᴇᴛᴇʟʏ ᴇxᴄʟᴜᴅᴇᴅ
+5. ꜱʜᴏᴡꜱ ᴘʀᴏɢʀᴇꜱꜱ ᴡɪᴛʜ ꜱᴜᴄᴄᴇꜱꜱ/ꜰᴀɪʟᴇᴅ ᴄᴏᴜɴᴛꜱ</blockquote>"""
+
+            kb = types.InlineKeyboardMarkup()
+            kb.row(types.InlineKeyboardButton("🔙 Back", callback_data="back_to_cmd"))
+
+            try:
+                if call.message.content_type == 'photo':
+                    bot.edit_message_media(
+                        media=types.InputMediaPhoto(STATS_IMAGE),
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id
+                    )
+                    bot.edit_message_caption(
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id,
+                        caption=help_text,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                else:
+                    bot.edit_message_text(
+                        help_text,
+                        call.message.chat.id,
+                        call.message.message_id,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                bot.answer_callback_query(call.id)
+            except Exception as e:
+                print(f"bbroadcast_help callback edit failed: {e}")
+                bot.answer_callback_query(call.id, "Unable to open bbroadcast_help.", show_alert=False)
+            return
+
+        # PING HELP callback
+        elif data == "pping_help":
+            help_text = """💞 Hᴇʏ...!!,
+
+<blockquote>➪<b>ᴘɪɴɢ</b>
+<code>/ping</code> - ᴄʜᴇᴄᴋꜱ ʙᴏᴛ'ꜱ ʀᴇꜱᴘᴏɴꜱᴇ ᴛɪᴍᴇ ᴀɴᴅ ꜱᴛᴀᴛᴜꜱ
+
+ʜᴏᴡ ɪᴛ ᴡᴏʀᴋꜱ:
+• ꜱᴇɴᴅꜱ ᴀ ʀᴇꜱᴘᴏɴꜱᴇ ᴡɪᴛʜ "ᴘᴏɴɢ!"
+• ꜱʜᴏᴡꜱ ʙᴏᴛ ɪꜱ ᴀʟɪᴠᴇ ᴀɴᴅ ᴡᴏʀᴋɪɴɢ
+• ᴍᴇᴀꜱᴜʀᴇꜱ ʀᴇꜱᴘᴏɴꜱᴇ ᴛɪᴍᴇ
+• ᴄᴏɴꜰɪʀᴍꜱ ʙᴏᴛ ᴄᴏɴɴᴇᴄᴛɪᴠɪᴛʏ
+
+ᴏᴜᴛᴘᴜᴛ:
+"ᴘᴏɴɢ! ʙᴏᴛ ɪꜱ ᴀʟɪᴠᴇ ᴀɴᴅ ᴡᴏʀᴋɪɴɢ"</blockquote>"""
+
+            kb = types.InlineKeyboardMarkup()
+            kb.row(types.InlineKeyboardButton("🔙 Back", callback_data="back_to_cmd"))
+
+            try:
+                if call.message.content_type == 'photo':
+                    bot.edit_message_media(
+                        media=types.InputMediaPhoto(STATS_IMAGE),
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id
+                    )
+                    bot.edit_message_caption(
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id,
+                        caption=help_text,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                else:
+                    bot.edit_message_text(
+                        help_text,
+                        call.message.chat.id,
+                        call.message.message_id,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                bot.answer_callback_query(call.id)
+            except Exception as e:
+                print(f"pping_help callback edit failed: {e}")
+                bot.answer_callback_query(call.id, "Unable to open pping_help.", show_alert=False)
+            return
+
+        # FSTATS HELP callback
+        elif data == "fstats_help":
+            help_text = """💞 Hᴇʏ...!!,
+
+<blockquote>➪<b>ꜱᴛᴀᴛꜱ</b>
+<code>/fstats</code> - ᴛʜɪꜱ ᴄᴏᴍᴍᴀɴᴅ ɢɪᴠᴇꜱ ʏᴏᴜ ᴀʟʟ ᴅᴍ ᴏɴʟʏ ꜰɪʟᴛᴇʀꜱ ꜰᴇᴀᴛᴜʀᴇꜱ ᴀɴᴅ ꜱᴇᴛᴛɪɴɢꜱ. ʙᴇʟᴏᴡ ʏᴏᴜ ᴄᴀɴ ꜱᴇᴇ ᴀʟʟ ᴄᴏᴍᴍᴀɴᴅꜱ ᴀɴᴅ ᴛʜᴇɪʀ ᴜꜱᴇꜱ.</blockquote>"""
+
+            kb = types.InlineKeyboardMarkup()
+            kb.row(
+                types.InlineKeyboardButton("enable", callback_data="enable_help"),
+                types.InlineKeyboardButton("disable", callback_data="disable_help"),
+                types.InlineKeyboardButton("open", callback_data="open_help")
+            )
+            kb.row(
+                types.InlineKeyboardButton("close", callback_data="close_help"),
+                types.InlineKeyboardButton("openglobal", callback_data="openglobal_help"),
+                types.InlineKeyboardButton("closeglobal", callback_data="closeglobal_help")
+            )
+            kb.row(
+                types.InlineKeyboardButton("opengroup", callback_data="opengroup_help"),
+                types.InlineKeyboardButton("closegroup", callback_data="closegroup_help"),
+                types.InlineKeyboardButton("closeid", callback_data="closeid_help")
+            )
+            kb.row(types.InlineKeyboardButton("🔙 Back", callback_data="back_to_cmd"))
+            
+            try:
+                if call.message.content_type == 'photo':
+                    bot.edit_message_media(
+                        media=types.InputMediaPhoto(STATS_IMAGE),
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id
+                    )
+                    bot.edit_message_caption(
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id,
+                        caption=help_text,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                else:
+                    bot.edit_message_text(
+                        help_text,
+                        call.message.chat.id,
+                        call.message.message_id,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                bot.answer_callback_query(call.id)
+            except Exception as e:
+                print(f"fstats_help callback edit failed: {e}")
+                bot.answer_callback_query(call.id, "Unable to open fstats_help.", show_alert=False)
+            return
+
+        # ENABLE HELP callback
+        elif data == "enable_help":
+            help_text = """💞 Hᴇʏ...!!,
+
+<blockquote><b>➪ᴇɴᴀʙʟᴇꜰɪʟᴛᴇʀ</b>
+<code>/enablefilter</code>- ᴛᴜʀɴꜱ ᴏɴ ᴅᴍ ᴏɴʟʏ ᴄʀᴇᴀᴛɪᴏɴ ᴍᴏᴅᴇ
+
+ʜᴏᴡ ɪᴛ ᴡᴏʀᴋꜱ:
+• ᴡʜᴇɴ ᴇɴᴀʙʟᴇᴅ, ᴀʟʟ ɴᴇᴡ ꜰɪʟᴛᴇʀꜱ ᴡɪʟʟ ʙᴇ ꜱᴀᴠᴇᴅ ᴀꜱ ᴅᴍ ᴏɴʟʏ ꜰɪʟᴛᴇʀꜱ
+• ɴᴏʀᴍᴀʟ ꜰɪʟᴛᴇʀꜱ ᴡɪʟʟ ɴᴏᴛ ʙᴇ ᴄʀᴇᴀᴛᴇᴅ
+• ᴏɴʟʏ ᴅᴍ ꜰɪʟᴛᴇʀꜱ ᴡɪʟʟ ʀᴇꜱᴘᴏɴᴅ ᴛᴏ ᴋᴇʏᴡᴏʀᴅꜱ
+• ᴜꜱᴇ /ᴅɪꜱᴀʙʟᴇꜰɪʟᴛᴇʀ ᴛᴏ ᴛᴜʀɴ ᴏꜰꜰ
+
+ᴇꜰꜰᴇᴄᴛ: ᴄᴏɴᴛʀᴏʟꜱ ᴡʜᴇʀᴇ ɴᴇᴡ ꜰɪʟᴛᴇʀꜱ ᴀʀᴇ ꜱᴀᴠᴇᴅ"</blockquote>"""
+
+            kb = types.InlineKeyboardMarkup()
+            kb.row(types.InlineKeyboardButton("🔙 Back", callback_data="back_to_fstats_help"))
+
+            try:
+                if call.message.content_type == 'photo':
+                    bot.edit_message_media(
+                        media=types.InputMediaPhoto(STATS_IMAGE),
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id
+                    )
+                    bot.edit_message_caption(
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id,
+                        caption=help_text,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                else:
+                    bot.edit_message_text(
+                        help_text,
+                        call.message.chat.id,
+                        call.message.message_id,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                bot.answer_callback_query(call.id)
+            except Exception as e:
+                print(f"enable_help callback edit failed: {e}")
+                bot.answer_callback_query(call.id, "Unable to open enable_help.", show_alert=False)
+            return
+
+        # DISABLE HELP callback
+        elif data == "disable_help":
+            help_text = """💞 Hᴇʏ...!!,
+
+<blockquote><b>➪ᴅɪꜱᴀʙʟᴇ ꜰɪʟᴛᴇʀ</b>
+<code>/disablefilter</code>- ᴛᴜʀɴꜱ ᴏꜰꜰ ᴅᴍ ᴏɴʟʏ ᴄʀᴇᴀᴛɪᴏɴ ᴍᴏᴅᴇ
+
+ʜᴏᴡ ɪᴛ ᴡᴏʀᴋꜱ:
+• ꜱᴡɪᴛᴄʜᴇꜱ ᴄʀᴇᴀᴛɪᴏɴ ᴍᴏᴅᴇ ᴛᴏ ɴᴏʀᴍᴀʟ
+• ɴᴇᴡ ꜰɪʟᴛᴇʀꜱ ᴡɪʟʟ ʙᴇ ꜱᴀᴠᴇᴅ ᴀꜱ ɴᴏʀᴍᴀʟ ꜰɪʟᴛᴇʀꜱ
+• ᴅᴍ ᴏɴʟʏ ꜰɪʟᴛᴇʀ ᴄʀᴇᴀᴛɪᴏɴ ɪꜱ ᴅɪꜱᴀʙʟᴇᴅ
+
+ᴇꜰꜰᴇᴄᴛ: ᴄᴏɴᴛʀᴏʟꜱ ᴡʜᴇʀᴇ ɴᴇᴡ ꜰɪʟᴛᴇʀꜱ ᴀʀᴇ ꜱᴀᴠᴇᴅ"</blockquote>"""
+
+            kb = types.InlineKeyboardMarkup()
+            kb.row(types.InlineKeyboardButton("🔙 Back", callback_data="back_to_fstats_help"))
+
+            try:
+                if call.message.content_type == 'photo':
+                    bot.edit_message_media(
+                        media=types.InputMediaPhoto(STATS_IMAGE),
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id
+                    )
+                    bot.edit_message_caption(
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id,
+                        caption=help_text,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                else:
+                    bot.edit_message_text(
+                        help_text,
+                        call.message.chat.id,
+                        call.message.message_id,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                bot.answer_callback_query(call.id)
+            except Exception as e:
+                print(f"disable_help callback edit failed: {e}")
+                bot.answer_callback_query(call.id, "Unable to open disable_help.", show_alert=False)
+            return
+
+        # OPEN HELP callback
+        elif data == "open_help":
+            help_text = """💞 Hᴇʏ...!!,
+
+<blockquote><b>ᴏᴘᴇɴ ꜰɪʟᴛᴇʀ</b>
+<code>/openfilter</code> - ᴇɴᴀʙʟᴇꜱ ɢʟᴏʙᴀʟ ᴅᴍ ᴏɴʟʏ ꜰɪʟᴛᴇʀꜱ
+
+ʜᴏᴡ ɪᴛ ᴡᴏʀᴋꜱ:
+• ᴛᴜʀɴꜱ ᴏɴ ᴅᴍ ꜰɪʟᴛᴇʀꜱ ɢʟᴏʙᴀʟʟʏ
+• ᴅᴍ ꜰɪʟᴛᴇʀꜱ ᴡɪʟʟ ʀᴇꜱᴘᴏɴᴅ ᴛᴏ ᴋᴇʏᴡᴏʀᴅꜱ
+• ᴡᴏʀᴋꜱ ɪɴ ᴘʀɪᴠᴀᴛᴇ ᴄʜᴀᴛꜱ ᴀɴᴅ ᴇɴᴀʙʟᴇᴅ ɢʀᴏᴜᴘꜱ
+
+ᴇꜰꜰᴇᴄᴛ: ᴄᴏɴᴛʀᴏʟꜱ ᴇɴᴛɪʀᴇ ᴅᴍ ꜰɪʟᴛᴇʀꜱ ꜱʏꜱᴛᴇᴍ"</blockquote>"""
+
+            kb = types.InlineKeyboardMarkup()
+            kb.row(types.InlineKeyboardButton("🔙 Back", callback_data="back_to_fstats_help"))
+
+            try:
+                if call.message.content_type == 'photo':
+                    bot.edit_message_media(
+                        media=types.InputMediaPhoto(STATS_IMAGE),
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id
+                    )
+                    bot.edit_message_caption(
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id,
+                        caption=help_text,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                else:
+                    bot.edit_message_text(
+                        help_text,
+                        call.message.chat.id,
+                        call.message.message_id,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                bot.answer_callback_query(call.id)
+            except Exception as e:
+                print(f"open_help callback edit failed: {e}")
+                bot.answer_callback_query(call.id, "Unable to open open_help.", show_alert=False)
+            return
+
+        # CLOSE HELP callback
+        elif data == "close_help":
+            help_text = """💞 Hᴇʏ...!!,
+
+<blockquote><b>ᴄʟᴏꜱᴇ ꜰɪʟᴛᴇʀ</b>
+<code>/closefilter</code>- ᴅɪꜱᴀʙʟᴇꜱ ɢʟᴏʙᴀʟ ᴅᴍ ᴏɴʟʏ ꜰɪʟᴛᴇʀꜱ
+
+ʜᴏᴡ ɪᴛ ᴡᴏʀᴋꜱ:
+• ᴛᴜʀɴꜱ ᴏꜰꜰ ᴅᴍ ꜰɪʟᴛᴇʀꜱ ɢʟᴏʙᴀʟʟʏ
+• ᴅᴍ ꜰɪʟᴛᴇʀꜱ ᴡɪʟʟ ɴᴏᴛ ʀᴇꜱᴘᴏɴᴅ ᴛᴏ ᴋᴇʙᴡᴏʀᴅꜱ
+• ᴄᴏᴍᴘʟᴇᴛᴇ ꜱʏꜱᴛᴇᴍ ɪꜱ ᴅɪꜱᴀʙʟᴇᴅ
+
+ᴇꜰꜰᴇᴄᴛ: ᴄᴏᴍᴘʟᴇᴛᴇʟʏ ᴅɪꜱᴀʙʟᴇꜱ ᴅᴍ ꜰɪʟᴛᴇʀꜱ ꜱʏꜱᴛᴇᴍ"</blockquote>"""
+
+            kb = types.InlineKeyboardMarkup()
+            kb.row(types.InlineKeyboardButton("🔙 Back", callback_data="back_to_fstats_help"))
+
+            try:
+                if call.message.content_type == 'photo':
+                    bot.edit_message_media(
+                        media=types.InputMediaPhoto(STATS_IMAGE),
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id
+                    )
+                    bot.edit_message_caption(
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id,
+                        caption=help_text,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                else:
+                    bot.edit_message_text(
+                        help_text,
+                        call.message.chat.id,
+                        call.message.message_id,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                bot.answer_callback_query(call.id)
+            except Exception as e:
+                print(f"close_help callback edit failed: {e}")
+                bot.answer_callback_query(call.id, "Unable to open close_help.", show_alert=False)
+            return
+
+        # OPEN GLOBAL HELP callback
+        elif data == "openglobal_help":
+            help_text = """💞 Hᴇʏ...!!,
+
+<blockquote><b>ᴏᴘᴇɴ ɢʟᴏʙᴀʟ ɢʀᴏᴜᴘ</b>
+<code>/openglobalgroup</code>- ᴇɴᴀʙʟᴇꜱ ᴅᴍ ꜰɪʟᴛᴇʀꜱ ɪɴ ᴀʟʟ ɢʀᴏᴜᴘꜱ
+
+ʜᴏᴡ ɪᴛ ᴡᴏʀᴋꜱ:
+• ᴅᴍ ꜰɪʟᴛᴇʀꜱ ᴡɪʟʟ ᴡᴏʀᴋ ɪɴ ᴇᴠᴇʀʏ ɢʀᴏᴜᴘ
+• ᴄᴀɴ ᴅɪꜱᴀʙʟᴇ ꜱᴘᴇᴄɪꜰɪᴄ ɢʀᴏᴜᴘꜱ ᴡɪᴛʜ /ᴄʟᴏꜱᴇɢʀᴏᴜᴘ
+• ɢʟᴏʙᴀʟ ɢʀᴏᴜᴘ ᴀᴄᴄᴇꜱꜱ ꜰᴏʀ ᴅᴍ ꜰɪʟᴛᴇʀꜱ
+
+ᴇꜰꜰᴇᴄᴛ: ᴇɴᴀʙʟᴇꜱ ᴅᴍ ꜰɪʟᴛᴇʀꜱ ɪɴ ᴀʟʟ ɢʟᴏᴜᴘꜱ"</blockquote>"""
+
+            kb = types.InlineKeyboardMarkup()
+            kb.row(types.InlineKeyboardButton("🔙 Back", callback_data="back_to_fstats_help"))
+
+            try:
+                if call.message.content_type == 'photo':
+                    bot.edit_message_media(
+                        media=types.InputMediaPhoto(STATS_IMAGE),
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id
+                    )
+                    bot.edit_message_caption(
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id,
+                        caption=help_text,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                else:
+                    bot.edit_message_text(
+                        help_text,
+                        call.message.chat.id,
+                        call.message.message_id,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                bot.answer_callback_query(call.id)
+            except Exception as e:
+                print(f"openglobal_help callback edit failed: {e}")
+                bot.answer_callback_query(call.id, "Unable to open openglobal_help.", show_alert=False)
+            return
+
+        # CLOSE GLOBAL HELP callback
+        elif data == "closeglobal_help":
+            help_text = """💞 Hᴇʏ...!!,
+
+<blockquote><b>ᴄʟᴏꜱᴇ ɢʟᴏʙᴀʟ ɢʀᴏᴜᴘ</b>
+<code>/closeglobalgroup</code>- ᴅɪꜱᴀʙʟᴇꜱ ᴅᴍ ꜰɪʟᴛᴇʀꜱ ɪɴ ᴀʟʟ ɢʀᴏᴜᴘꜱ
+
+ʜᴏᴡ ɪᴛ ᴡᴏʀᴋꜱ:
+• ᴅᴍ ꜰɪʟᴛᴇʀꜱ ᴅɪꜱᴀʙʟᴇᴅ ɪɴ ᴀʟʟ ɢʀᴏᴜᴘꜱ
+• ᴄᴀɴ ᴇɴᴀʙʟᴇ ꜱᴘᴇᴄɪꜰɪᴄ ɢʀᴏᴜᴘꜱ ᴡɪᴛʜ /ᴏᴘᴇɴɢʀᴏᴜᴘ
+• ɢʟᴏʙᴀʟ ɢʀᴏᴜᴘ ᴀᴄᴄᴇꜱꜱ ʀᴇᴍᴏᴠᴇᴅ
+
+ᴇꜰꜱᴇᴄᴛ: ᴅɪꜱᴀʙʟᴇꜱ ᴅᴍ ꜰɪʟᴛᴇʀꜱ ɪɴ ᴀʟʟ ɢʀᴏᴜᴘꜱ"</blockquote>"""
+
+            kb = types.InlineKeyboardMarkup()
+            kb.row(types.InlineKeyboardButton("🔙 Back", callback_data="back_to_fstats_help"))
+
+            try:
+                if call.message.content_type == 'photo':
+                    bot.edit_message_media(
+                        media=types.InputMediaPhoto(STATS_IMAGE),
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id
+                    )
+                    bot.edit_message_caption(
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id,
+                        caption=help_text,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                else:
+                    bot.edit_message_text(
+                        help_text,
+                        call.message.chat.id,
+                        call.message.message_id,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                bot.answer_callback_query(call.id)
+            except Exception as e:
+                print(f"closeglobal_help callback edit failed: {e}")
+                bot.answer_callback_query(call.id, "Unable to open closeglobal_help.", show_alert=False)
+            return
+
+        # OPEN GROUP HELP callback
+        elif data == "opengroup_help":
+            help_text = """💞 Hᴇʏ...!!,
+
+<blockquote><b>ᴏᴘᴇɴ ɢʀᴏᴜᴘ</b>
+<code>/opengroup</code> ɢʀᴏᴜᴘ_ɪᴅ - ᴇɴᴀʙʟᴇꜱ ᴅᴍ ꜰɪʟᴛᴇʀꜱ ꜰᴏʀ ꜱᴘᴇᴄɪꜰɪᴄ ɢʀᴏᴜᴘ
+
+ʜᴏᴡ ɪᴛ ᴡᴏʀᴋꜱ:
+• ᴇɴᴀʙʟᴇꜱ ᴅᴍ ꜰɪʟᴛᴇʀꜱ ꜰᴏʀ ᴛʜᴇ ꜱᴘᴇᴄɪꜰɪᴇᴅ ɢʀᴏᴜᴘ ɪᴅ
+• ᴇxᴀᴍᴘʟᴇ: /ᴏᴘᴇɴɢʀᴏᴜᴘ -100123456789
+• ᴅᴍ ꜰɪʟᴛᴇʀꜱ ᴡɪʟʟ ᴡᴏʀᴋ ɪɴ ᴛʜᴀᴛ ꜱᴘᴇᴄɪꜰɪᴄ ɢʀᴏᴜᴘ
+
+ᴇꜰꜰᴇᴄᴛ: ᴇɴᴀʙʟᴇꜱ ᴅᴍ ꜰɪʟᴛᴇʀꜱ ꜰᴏʀ ᴀ ꜱᴘᴇᴄɪꜰɪᴄ ɢʀᴏᴜᴘ ᴏɴʟʏ"</blockquote>"""
+
+            kb = types.InlineKeyboardMarkup()
+            kb.row(types.InlineKeyboardButton("🔙 Back", callback_data="back_to_fstats_help"))
+
+            try:
+                if call.message.content_type == 'photo':
+                    bot.edit_message_media(
+                        media=types.InputMediaPhoto(STATS_IMAGE),
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id
+                    )
+                    bot.edit_message_caption(
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id,
+                        caption=help_text,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                else:
+                    bot.edit_message_text(
+                        help_text,
+                        call.message.chat.id,
+                        call.message.message_id,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                bot.answer_callback_query(call.id)
+            except Exception as e:
+                print(f"opengroup_help callback edit failed: {e}")
+                bot.answer_callback_query(call.id, "Unable to open opengroup_help.", show_alert=False)
+            return
+
+        # CLOSE GROUP HELP callback
+        elif data == "closegroup_help":
+            help_text = """💞 Hᴇʏ...!!,
+
+<blockquote><b>ᴄʟᴏꜱᴇ ɢʀᴏᴜᴘ</b>
+<code>/closegroup</code> ɢʀᴏᴜᴘ_ɪᴅ - ᴅɪꜱᴀʙʟᴇꜱ ᴅᴍ ꜰɪʟᴛᴇʀꜱ ꜰᴏʀ ꜱᴘᴇᴄɪꜰɪᴄ ɢʀᴏᴜᴘ
+
+ʜᴏᴡ ɪᴛ ᴡᴏʀᴋꜱ:
+• ᴅɪꜱᴀʙʟᴇꜱ ᴅᴍ ꜰɪʟᴛᴇʀꜱ ꜰᴏʀ ᴛʜᴇ ꜱᴘᴇᴄɪꜰɪᴇᴅ ɢʀᴏᴜᴘ ɪᴅ
+• ᴇxᴀᴍᴘʟᴇ: /ᴄʟᴏꜱᴇɢʀᴏᴜᴘ -100123456789
+• ᴅᴍ ꜰɪʟᴛᴇʀꜱ ᴡɪʟʟ ɴᴏᴛ ᴡᴏʀᴋ ɪɴ ᴛʜᴀᴛ ꜱᴘᴇᴄɪꜰɪᴄ ɢʀᴏᴜᴘ
+
+ᴇꜰꜰᴇᴄᴛ: ᴅɪꜱᴀʙʟᴇꜱ ᴅᴍ ꜰɪʟᴛᴇʀꜱ ꜰᴏʀ ᴀ ꜱᴘᴇᴄɪꜰɪᴄ ɢʀᴏᴜᴘ ᴏɴʟʏ"</blockquote>"""
+
+            kb = types.InlineKeyboardMarkup()
+            kb.row(types.InlineKeyboardButton("🔙 Back", callback_data="back_to_fstats_help"))
+
+            try:
+                if call.message.content_type == 'photo':
+                    bot.edit_message_media(
+                        media=types.InputMediaPhoto(STATS_IMAGE),
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id
+                    )
+                    bot.edit_message_caption(
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id,
+                        caption=help_text,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                else:
+                    bot.edit_message_text(
+                        help_text,
+                        call.message.chat.id,
+                        call.message.message_id,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                bot.answer_callback_query(call.id)
+            except Exception as e:
+                print(f"closegroup_help callback edit failed: {e}")
+                bot.answer_callback_query(call.id, "Unable to open closegroup_help.", show_alert=False)
+            return
+
+        # CLOSEID HELP callback
+        elif data == "closeid_help":
+            help_text = """💞 Hᴇʏ...!!,
+
+<blockquote><b>ᴄʟᴏꜱᴇɪᴅ</b>
+<code>/closeid</code> - ꜱʜᴏᴡꜱ ʟɪꜱᴛ ᴏꜰ ɢʀᴏᴜᴘꜱ ᴡʜᴇʀᴇ ᴅᴍ ꜰɪʟᴛᴇʀꜱ ᴀʀᴇ ᴅɪꜱᴀʙʟᴇᴅ
+
+ʜᴏᴡ ɪᴛ ᴡᴏʀᴋꜱ:
+• ꜱʜᴏᴡꜱ ɢʀᴏᴜᴘ ɴᴀᴍᴇꜱ ᴀɴᴅ ɪᴅꜱ
+• ᴅɪꜱᴘʟᴀʏꜱ ᴀʟʟ ɢʀᴏᴜᴘꜱ ᴡɪᴛʜ ᴅɪꜱᴀʙʟᴇᴅ ᴅᴍ ꜰɪʟᴛᴇʀꜱ
+• ꜱʜᴏᴡꜱ ᴛᴏᴛᴀʟ ᴄᴏᴜɴᴛ ᴏꜰ ᴅɪꜱᴀʙʟᴇᴅ ɢʀᴏᴜᴘꜱ
+
+ᴇꜰꜰᴇᴄᴛ: ᴘʀᴏᴠɪᴅᴇꜱ ᴄᴏᴍᴘʟᴇᴛᴇ ʟɪꜱᴛ ᴏꜰ ɢʀᴏᴜᴘꜱ ᴡɪᴛʜ ᴅɪꜱᴀʙʟᴇᴅ ᴅᴍ ꜰɪʟᴛᴇʀꜱ"</blockquote>"""
+
+            kb = types.InlineKeyboardMarkup()
+            kb.row(types.InlineKeyboardButton("🔙 Back", callback_data="back_to_fstats_help"))
+
+            try:
+                if call.message.content_type == 'photo':
+                    bot.edit_message_media(
+                        media=types.InputMediaPhoto(STATS_IMAGE),
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id
+                    )
+                    bot.edit_message_caption(
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id,
+                        caption=help_text,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                else:
+                    bot.edit_message_text(
+                        help_text,
+                        call.message.chat.id,
+                        call.message.message_id,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                bot.answer_callback_query(call.id)
+            except Exception as e:
+                print(f"closeid_help callback edit failed: {e}")
+                bot.answer_callback_query(call.id, "Unable to open closeid_help.", show_alert=False)
+            return
+
+        # BACK TO FSTATS HELP callback
+        elif data == "back_to_fstats_help":
+            help_text = """💞 Hᴇʏ...!!,
+
+<blockquote>➪<b>ꜱᴛᴀᴛꜱ</b>
+<code>/fstats</code> - ᴛʜɪꜱ ᴄᴏᴍᴍᴀɴᴅ ɢɪᴠᴇꜱ ʏᴏᴜ ᴀʟʟ ᴅᴍ ᴏɴʟʏ ꜰɪʟᴛᴇʀꜱ ꜰᴇᴀᴛᴜʀᴇꜱ ᴀɴᴅ ꜱᴇᴛᴛɪɴɢꜱ. ʙᴇʟᴏᴡ ʏᴏᴜ ᴄᴀɴ ꜱᴇᴇ ᴀʟʟ ᴄᴏᴍᴍᴀɴᴅꜱ ᴀɴᴅ ᴛʜᴇɪʀ ᴜꜱᴇꜱ.</blockquote>"""
+
+            kb = types.InlineKeyboardMarkup()
+            kb.row(
+                types.InlineKeyboardButton("enable", callback_data="enable_help"),
+                types.InlineKeyboardButton("disable", callback_data="disable_help"),
+                types.InlineKeyboardButton("open", callback_data="open_help")
+            )
+            kb.row(
+                types.InlineKeyboardButton("close", callback_data="close_help"),
+                types.InlineKeyboardButton("openglobal", callback_data="openglobal_help"),
+                types.InlineKeyboardButton("closeglobal", callback_data="closeglobal_help")
+            )
+            kb.row(
+                types.InlineKeyboardButton("opengroup", callback_data="opengroup_help"),
+                types.InlineKeyboardButton("closegroup", callback_data="closegroup_help"),
+                types.InlineKeyboardButton("closeid", callback_data="closeid_help")
+            )
+            kb.row(types.InlineKeyboardButton("🔙 Back", callback_data="back_to_cmd"))
+            
+            try:
+                if call.message.content_type == 'photo':
+                    bot.edit_message_media(
+                        media=types.InputMediaPhoto(STATS_IMAGE),
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id
+                    )
+                    bot.edit_message_caption(
+                        chat_id=call.message.chat.id,
+                        message_id=call.message.message_id,
+                        caption=help_text,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                else:
+                    bot.edit_message_text(
+                        help_text,
+                        call.message.chat.id,
+                        call.message.message_id,
+                        reply_markup=kb,
+                        parse_mode="HTML"
+                    )
+                bot.answer_callback_query(call.id)
+            except Exception as e:
+                print(f"fstats_help callback edit failed: {e}")
+                bot.answer_callback_query(call.id, "Unable to open fstats_help.", show_alert=False)
+            return
 
         bot.answer_callback_query(call.id, "")
 
